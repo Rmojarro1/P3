@@ -31,12 +31,24 @@ def setup_behavior_tree():
     attack = Action(attack_weakest_enemy_planet)
     offensive_plan.child_nodes = [largest_fleet_check, attack]
 
+    defensive_plan = Sequence(name='Defensive Strategy')
+    smallest_fleet_check = Check(have_smallest_fleet)
+    strongest_attack_check = Check(have_strongest_planet)
+    defend = Action(destory_strongest_enemy_planet)
+    defensive_plan.child_nodes = [smallest_fleet_check, strongest_attack_check, defend]
+
     spread_sequence = Sequence(name='Spread Strategy')
     neutral_planet_check = Check(if_neutral_planet_available)
-    spread_action = Action(spread_to_weakest_neutral_planet)
-    spread_sequence.child_nodes = [neutral_planet_check, spread_action]
+    planet_count = Check(not_enough_planets); 
+    #spread_low = Action(spread_to_nuetral_minimum_fleet)
+    spread_normal = Action(spread_to_nuetral_minimum_fleet)
+    #spread_type = Selector(name='Spread Type')
+    #spread_type.child_nodes = [planet_count, spread_normal, spread_low]
+    #spread_sequence.child_nodes = [neutral_planet_check, spread_type]
+    spread_sequence.child_nodes = [neutral_planet_check, planet_count, spread_normal]
+    #spread_sequence.child_nodes = [neutral_planet_check, less_planet_check,  spread_action]
 
-    root.child_nodes = [offensive_plan, spread_sequence, attack.copy()]
+    root.child_nodes = [spread_sequence, offensive_plan, defensive_plan, attack.copy()]
 
     logging.info('\n' + root.tree_to_string())
     return root
