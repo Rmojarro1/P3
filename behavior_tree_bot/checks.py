@@ -1,43 +1,35 @@
-import sys
-sys.path.insert(0, '../')
-from planet_wars import PlanetWars, Planet, Fleet, issue_order
-from functools import *
-from typing import List
-import logging
-
+#premades
 def if_neutral_planet_available(state):
     return any(state.neutral_planets())
 
-def not_enough_planets(state):
-    return len(state.my_planets()) <= 6
 
+def have_largest_fleet(state): #not actually the right name
+    for myplanet in state.my_planets():
+        for eplanet in state.enemy_planets():
+            if(eplanet.num_ships < myplanet.num_ships/2):
+                return True
+    return False
 
-def have_largest_fleet(state):
-    return sum(planet.num_ships for planet in state.my_planets()) \
-             + sum(fleet.num_ships for fleet in state.my_fleets()) \
-           > sum(planet.num_ships for planet in state.enemy_planets()) \
-             + sum(fleet.num_ships for fleet in state.enemy_fleets())
-
-
-def have_smallest_fleet(state):
-    return sum(planet.num_ships for planet in state.my_planets()) \
-             + sum(fleet.num_ships for fleet in state.my_fleets()) \
-           < sum(planet.num_ships for planet in state.enemy_planets()) \
-             + sum(fleet.num_ships for fleet in state.enemy_fleets())
-
-def have_most_planets(state):
-    return len(state.my_planets()) > len(state.enemy_planets())
-
-def have_fewest_planets(state):
-    return len(state.my_planets()) < len(state.enemy_planets())
-
-def have_strongest_planet(state):
-    my_strongest = max(state.my_planets(), key=lambda t: t.num_ships, default=None)
-    enemy_strongest = max(state.enemy_planets(), key=lambda t: t.num_ships, default=None)
-    
-    if my_strongest is None:
+#my checks
+def CloseOccupation(state):
+    if(not state.my_planets()):
         return False
-    if enemy_strongest is None:
-        return True
-    
-    return my_strongest.num_ships > enemy_strongest.num_ships
+    divider = 2 #change if you want to send ships even though you don't have that many
+    for myplanet in state.my_planets():
+        for nplanet in state.neutral_planets():
+            if(state.distance(myplanet.ID, nplanet.ID) < 5 and myplanet.num_ships/divider > nplanet.num_ships):
+                return True
+    return False
+
+
+def IsStealable(state):
+    for efleet in state.enemy_fleets():
+        if (state.planets[efleet.destination_planet] in state.neutral_planets() or state.my_planets()):
+            return True
+    return False
+
+def IsDefendable(state):
+    for efleet in state.enemy_fleets():
+        if (state.planets[efleet.destination_planet] in state.my_planets()):
+            return True
+    return False
